@@ -1,3 +1,7 @@
+from dataclasses import dataclass
+
+@dataclass
 class Transaction:
-    def __init__(self):
-        pass
+    sender: int
+    recipient: int
+    quantity: float

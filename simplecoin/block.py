@@ -18,5 +18,5 @@ class Block:
         return hashlib.sha256(serialize_block.encode()).hexdigest()
 
     def __repr__(self) -> str:
-        return f"{self.prev_block_hash}-{self.nonce}-{self.data}-{self.timestamp}"
+        return f"**{self.prev_block_hash}-{self.nonce}-{self.data}-{self.timestamp}**\n"
 

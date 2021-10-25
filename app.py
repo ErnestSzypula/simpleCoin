@@ -18,6 +18,7 @@ class App(Cmd):
 
     def do_print_blockchain(self, arg):
         """Print Blockchain"""
+        print("**prev block hash-nonce-data-timestamp**")
         print(self.blockchain.chain)
 
     def do_print_pending_data(self, arg):

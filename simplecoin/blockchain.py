@@ -36,22 +36,40 @@ class BlockChain:
         return True
 
     @staticmethod
-    def proof_of_work(hash: str):
-        hash_digest = hashlib.sha256(f'{hash}{secrets.randbits(32)}'.encode()).hexdigest()
-        mining_difficulty_level=2
+    def proof_of_work(last_nonce: str):
+       
         rounds = 0
-
-        while not hash_digest.startswith("0" * mining_difficulty_level):
-            hash_digest = hashlib.sha256(f'{hash}{secrets.randbits(32)}'.encode()).hexdigest()
+        secret = secrets.randbits(32)
+        while BlockChain.verifying_proof(last_nonce, secret) is False:
+            secret = secrets.randbits(32)
             rounds += 1
 
-        return hash_digest
+        print("It took ", rounds," rounds")
 
+        return secret
+
+    @staticmethod
+    def verifying_proof(last_nonce, nonce):
+        mining_difficulty_level=2
+        hash_digest = hashlib.sha256(f'{last_nonce}{nonce}'.encode()).hexdigest()
+        return hash_digest.startswith("0" * mining_difficulty_level)
 
     def dig_block(self, miner_id):
-        last_hash = self.chain[-1].calculate_hash
-        nonce = BlockChain.proof_of_work(last_hash)
+        last_nonce = self.chain[-1].nonce
+        nonce = BlockChain.proof_of_work(last_nonce)
         self.new_data(Transaction(0,miner_id, 1.)) # Reward for the miner
-        block = self.construct_block(last_hash, nonce)
+        block = self.construct_block(last_nonce, nonce)
 
         return vars(block)
+
+    @staticmethod
+    def check_validity(block, prev_block):
+        if prev_block.calculate_hash != block.prev_block_hash:
+            return False
+
+        elif prev_block.timestamp >= block.timestamp:
+            return False
+
+        elif BlockChain.verifying_proof(prev_block.nonce, block.nonce):
+            return False
+

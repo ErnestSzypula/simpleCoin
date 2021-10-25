@@ -58,7 +58,7 @@ class BlockChain:
         last_nonce = self.chain[-1].nonce
         nonce = BlockChain.proof_of_work(last_nonce)
         self.new_data(Transaction(0,miner_id, 1.)) # Reward for the miner
-        block = self.construct_block(last_nonce, nonce)
+        block = self.construct_block(self.chain[-1].calculate_hash, nonce)
 
         return vars(block)
 

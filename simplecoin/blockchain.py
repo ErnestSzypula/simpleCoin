@@ -16,7 +16,12 @@ class BlockChain:
         self.chain.append(block)
 
     def construct_first_block(self):
-        self.construct_block(prev_block_hash="", nonce="")
+        tempolary_block = Block(
+            prev_block_hash=hashlib.sha256("0".encode()).hexdigest(),
+            data=self.pending_data)
+        self.pending_data = []
+        block = BlockChain.proof_of_work(tempolary_block)
+        self.chain.append(block)
 
     def construct_block(self, prev_block_hash, nonce):
         block = Block(
@@ -36,29 +41,35 @@ class BlockChain:
         return True
 
     @staticmethod
-    def proof_of_work(last_nonce: str):
+    def proof_of_work(block: Block):
        
         rounds = 0
-        secret = secrets.randbits(32)
-        while BlockChain.verifying_proof(last_nonce, secret) is False:
-            secret = secrets.randbits(32)
+        block.nonce = secrets.randbits(32)
+        while BlockChain.verifying_proof(block) is False:
+            block.nonce = secrets.randbits(32)
             rounds += 1
 
         print("It took ", rounds," rounds")
 
-        return secret
+        return block
 
     @staticmethod
-    def verifying_proof(last_nonce, nonce):
+    def verifying_proof(block: Block):
         mining_difficulty_level=2
-        hash_digest = hashlib.sha256(f'{last_nonce}{nonce}'.encode()).hexdigest()
-        return hash_digest.startswith("0" * mining_difficulty_level)
+        return block.calculate_hash.startswith("0" * mining_difficulty_level)
 
     def dig_block(self, miner_id):
-        last_nonce = self.chain[-1].nonce
-        nonce = BlockChain.proof_of_work(last_nonce)
+        prev_block_hash = self.chain[-1].calculate_hash
         self.new_data(Transaction(0,miner_id, 1.)) # Reward for the miner
-        block = self.construct_block(self.chain[-1].calculate_hash, nonce)
+        tempolary_block = Block(
+            prev_block_hash=prev_block_hash,
+            data=self.pending_data)
+        
+        block = BlockChain.proof_of_work(tempolary_block)
+
+        self.chain.append(block)
+
+        self.pending_data = []  
 
         return vars(block)
 

@@ -5,7 +5,7 @@ from simplecoin.transaction import Transaction
 
 
 class Block:
-    def __init__(self, prev_block_hash: str, nonce: str, data: Transaction, timestamp=None):
+    def __init__(self, prev_block_hash: str, data: Transaction, nonce=0, timestamp=None):
         self.prev_block_hash = prev_block_hash
         self.nonce = nonce
         self.data = data
@@ -18,5 +18,5 @@ class Block:
         return hashlib.sha256(serialize_block.encode()).hexdigest()
 
     def __repr__(self) -> str:
-        return f"**{self.prev_block_hash}-{self.nonce}-{self.data}-{self.timestamp}**\n"
+        return f"** {self.prev_block_hash}-{self.nonce}-{self.data}-{self.timestamp} **\n"
 

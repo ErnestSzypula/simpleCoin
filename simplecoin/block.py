@@ -1,11 +1,12 @@
 import hashlib
 import time
+from typing import List
 
 from simplecoin.transaction import Transaction
 
 
 class Block:
-    def __init__(self, prev_block_hash: str, data: Transaction, nonce=0, timestamp=None):
+    def __init__(self, prev_block_hash: str, data: List[Transaction], nonce: str = 0, timestamp: float = None):
         self.prev_block_hash = prev_block_hash
         self.nonce = nonce
         self.data = data
@@ -19,4 +20,3 @@ class Block:
 
     def __repr__(self) -> str:
         return f"** {self.prev_block_hash}-{self.nonce}-{self.data}-{self.timestamp} **\n"
-

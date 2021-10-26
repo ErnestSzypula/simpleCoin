@@ -38,6 +38,13 @@ class App(Cmd):
         """Dig block"""
         self.blockchain.dig_block(self.miner_id)
 
+    def do_check_blockchain_validity(self, arg):
+        """Check blockchain validity"""
+        if self.blockchain.is_valid():
+            print("block chain is valid")
+        else:
+            print("block chain is invalid!")
+
     def cmdloop(self, intro=None):
         print(self.intro)
         try:

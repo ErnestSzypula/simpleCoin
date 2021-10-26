@@ -6,7 +6,7 @@ from simplecoin.transaction import Transaction
 
 
 class Block:
-    def __init__(self, prev_block_hash: str, data: List[Transaction], nonce: str = 0, timestamp: float = None):
+    def __init__(self, prev_block_hash: str, data: List[Transaction], nonce: int = 0, timestamp: float = None):
         self.prev_block_hash = prev_block_hash
         self.nonce = nonce
         self.data = data

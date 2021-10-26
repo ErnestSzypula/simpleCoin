@@ -36,9 +36,8 @@ class BlockChain:
     def last_block(self) -> Block:
         return self.chain[-1]
 
-    def new_data(self, transaction: Transaction) -> bool:
+    def new_data(self, transaction: Transaction):
         self.pending_data.append(transaction)
-        return True
 
     @staticmethod
     def proof_of_work(block: Block) -> Block:
@@ -89,6 +88,6 @@ class BlockChain:
 
     def is_valid(self) -> bool:
         for i in range(len(self.chain) - 1, 0, -1):
-            if self.check_validity(self.chain[i], self.chain[i-1]) is False:
+            if BlockChain.check_validity(self.chain[i], self.chain[i-1]) is False:
                 return False
         return True

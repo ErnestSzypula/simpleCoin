@@ -11,6 +11,7 @@ class App(Cmd):
     def __init__(self, miner_id):
         Cmd.__init__(self)
         self.blockchain: BlockChain = BlockChain()
+        print("To build the first block")
         self.miner_id = miner_id
 
     def default(self, line: str):

@@ -67,9 +67,11 @@ class BlockChain:
         
         block = BlockChain.proof_of_work(tempolary_block)
 
-        self.chain.append(block)
+        if BlockChain.check_validity(block, self.chain[-1]):
+            print("Validation successful... appending")
+            self.chain.append(block)
+            self.pending_data = []  
 
-        self.pending_data = []  
 
         return vars(block)
 
@@ -81,6 +83,8 @@ class BlockChain:
         elif prev_block.timestamp >= block.timestamp:
             return False
 
-        elif BlockChain.verifying_proof(prev_block.nonce, block.nonce):
+        elif not BlockChain.verifying_proof(block):
             return False
+
+        return True
 

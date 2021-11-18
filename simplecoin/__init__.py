@@ -1,3 +1,3 @@
 from simplecoin.block import Block
-from simplecoin.blockchain import BlockChain
+from simplecoin.chain_manager import ChainManager
 from simplecoin.transaction import Transaction

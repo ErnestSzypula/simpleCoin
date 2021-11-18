@@ -1,6 +1,7 @@
+import json
 from cmd import Cmd
 
-from simplecoin import BlockChain, Transaction
+from simplecoin import ChainManager, Transaction
 from tools import read
 
 
@@ -10,7 +11,7 @@ class App(Cmd):
 
     def __init__(self, miner_id):
         Cmd.__init__(self)
-        self.blockchain: BlockChain = BlockChain()
+        self.chain_manager: ChainManager = ChainManager()
         print("To build the first block")
         self.miner_id = miner_id
 
@@ -20,27 +21,27 @@ class App(Cmd):
     def do_print_blockchain(self, arg):
         """Print Blockchain"""
         print("** prev block hash-nonce-data-timestamp **")
-        print(self.blockchain.chain)
+        print(json.dumps(self.chain_manager.chain))
 
     def do_print_pending_data(self, arg):
         """Print Block Chain Pending Data"""
-        print(self.blockchain.pending_data)
+        print(json.dumps(self.chain_manager.pending_data))
 
     def do_add_transaction(self, arg):
         """Add transaction"""
         try:
             transaction: Transaction = read_transaction()
-            self.blockchain.new_data(transaction)
+            self.chain_manager.new_data(transaction)
         except ValueError:
             pass
 
     def do_dig_block(self, arg):
         """Dig block"""
-        self.blockchain.dig_block(self.miner_id)
+        self.chain_manager.dig_block(self.miner_id)
 
     def do_check_blockchain_validity(self, arg):
         """Check blockchain validity"""
-        if self.blockchain.is_valid():
+        if self.chain_manager.is_valid():
             print("block chain is valid")
         else:
             print("block chain is invalid!")

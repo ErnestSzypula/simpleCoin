@@ -4,7 +4,7 @@ from app import App
 
 def main():
     miner_id = str(uuid.uuid4())
-    app = App(miner_id)
+    app = App()
     app.cmdloop()
 
 

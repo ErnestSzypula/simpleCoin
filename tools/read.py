@@ -1,7 +1,7 @@
 import builtins
 
 
-def read(t: builtins, name: str) -> int:
+def read(t: builtins, name: str) -> any:
     try:
         value = t(input(name + ": "))
         return value

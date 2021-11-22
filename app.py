@@ -1,7 +1,8 @@
-import json
 from cmd import Cmd
 
 from simplecoin import ChainManager, Transaction, User
+from simplecoin import CoinNotBelongToUserError, DoubleSpendingError
+
 from tools import read
 from typing import Dict
 
@@ -19,6 +20,13 @@ class App(Cmd):
     def default(self, line: str):
         self.stdout.write("unknown command: %s \n Type help or ? to list commands.\n")
 
+    def do_initialize_blockchain(self, arg):
+        """Initialize Blockchain with given coin amount"""
+        if arg == "":
+            print("error: you need give coin amount")
+            return
+        self.chain_manager.construct_first_block([u for u in self.users], int(arg))
+
     def do_print_blockchain(self, arg):
         """Print Blockchain"""
         print("** prev block hash-nonce-data-timestamp **")
@@ -34,7 +42,11 @@ class App(Cmd):
             transaction: Transaction = read_transaction()
             self.chain_manager.new_data(transaction)
         except ValueError:
-            pass
+            print("Wrong input value")
+        except CoinNotBelongToUserError:
+            print("coin not belong to user")
+        except DoubleSpendingError:
+            print("double spending")
 
     def do_dig_block(self, arg):
         """Dig block"""
@@ -48,14 +60,35 @@ class App(Cmd):
             print("block chain is invalid!")
 
     def do_add_user(self, arg):
-        """Add user"""
-        user = User(arg[0], self.chain_manager)
-        self.users[arg[0]] = user
+        """Add user with given name"""
+        if arg == "":
+            print("error: you need give user name")
+            return
+        user = User(arg, self.chain_manager)
+        self.users[arg] = user
         self.chain_manager.register_user_callback(user.update_hash)
 
     def do_show_user_hash(self, arg):
-        """Show user hash"""
-        print(self.users[arg[0]].hash)
+        """Show user with given name hash"""
+        if arg == "":
+            print("error: you need give user name")
+            return
+
+        try:
+            print(self.users[arg].hash)
+        except KeyError:
+            print("user not exist")
+
+    def do_user_checkout(self, arg):
+        """User with given name checkout"""
+        if arg == "":
+            print("error: you need give user name")
+            return
+        try:
+            self.users[arg].checkout()
+            print(f"User {arg} have coin eith IDs {self.users[arg].coins}")
+        except KeyError:
+            print("user not exist")
 
     def cmdloop(self, intro=None):
         print(self.intro)
@@ -66,7 +99,7 @@ class App(Cmd):
 
 
 def read_transaction() -> Transaction:
-    sender: int = read(int, "sender")
-    recipient: int = read(int, "recipient")
-    quantity: float = read(float, "quantity")
-    return Transaction(sender, recipient, quantity)
+    sender: str = read(str, "sender")
+    recipient: str = read(str, "recipient")
+    coin_id: int = read(int, "coin_id")
+    return Transaction(sender=sender, recipient=recipient, coin_id=coin_id)

@@ -1,10 +1,12 @@
 import secrets
 import hashlib
+import random
 from typing import List, Dict, Any, Callable
 
-from simplecoin.block import Block, calculate_hash
+from simplecoin.block import Block
 from simplecoin.transaction import Transaction
 from simplecoin.coin_storage import CoinStorage
+from simplecoin.error import CoinNotBelongToUserError, DoubleSpendingError
 
 
 class ChainManager:
@@ -13,17 +15,18 @@ class ChainManager:
         self.pending_data: List[Transaction] = []
         self.coin_store: CoinStorage = CoinStorage()
         self.hash_callback: List[Callable[[str], None]] = []
-        self.construct_first_block()
 
     def append_block(self, block: Block):
         self.chain.append(block)
 
-    def construct_first_block(self):
-        tempolary_block = Block(
-            prev_block_hash=hashlib.sha256("0".encode()).hexdigest(),
+    def construct_first_block(self, users: List[str], coin_amount: int):
+        for i in range(coin_amount):
+            coin_id = self.coin_store.new_coin(random.uniform(0, 10.0))
+            self.pending_data.append(Transaction(recipient=random.choice(users),  coin_id=coin_id))
+        temporary_block = Block(
             data=self.pending_data)
         self.pending_data = []
-        block = ChainManager.proof_of_work(tempolary_block)
+        block = ChainManager.proof_of_work(temporary_block)
         self.chain.append(block)
 
     def construct_block(self, prev_block_hash: str, nonce: int) -> Block:
@@ -40,7 +43,23 @@ class ChainManager:
         return self.chain[-1]
 
     def new_data(self, transaction: Transaction):
+        if not self.has_user_coin(transaction):
+            raise CoinNotBelongToUserError
+
+        if self.is_double_spending(transaction):
+            raise DoubleSpendingError
+
         self.pending_data.append(transaction)
+
+    def has_user_coin(self, transaction: Transaction) -> bool:
+        return transaction.coin_id in self.checkout(transaction.sender)
+
+    def is_double_spending(self, transaction: Transaction) -> bool:
+        for t in  self.pending_data:
+            if t.sender == transaction.sender and t.coin_id == transaction.coin_id:
+                return True
+
+        return False
 
     @staticmethod
     def proof_of_work(block: Block) -> Block:
@@ -58,10 +77,10 @@ class ChainManager:
     @staticmethod
     def verifying_proof(block: Block) -> bool:
         mining_difficulty_level = 2
-        return calculate_hash(block).startswith("0" * mining_difficulty_level)
+        return block.calculate_hash.startswith("0" * mining_difficulty_level)
 
     def dig_block(self) -> Dict[str, Any]:
-        prev_block_hash = calculate_hash(self.chain[-1])
+        prev_block_hash = self.chain[-1].calculate_hash
         temporary_block = Block(
             prev_block_hash=prev_block_hash,
             data=self.pending_data)
@@ -74,13 +93,13 @@ class ChainManager:
             self.pending_data = []
 
         for hc in self.hash_callback:
-            hc(calculate_hash(block))
+            hc(block.calculate_hash)
 
         return vars(block)
 
     @staticmethod
     def check_validity(block: Block, prev_block: Block) -> bool:
-        if calculate_hash(prev_block) != block.prev_block_hash:
+        if prev_block.calculate_hash != block.prev_block_hash:
             return False
 
         elif prev_block.timestamp >= block.timestamp:
@@ -99,3 +118,13 @@ class ChainManager:
 
     def register_user_callback(self, f: Callable[[str], None]):
         self.hash_callback.append(f)
+
+    def checkout(self, user: str) -> List[int]:
+        coins = []
+        for b in self.chain:
+            for t in b.data:
+                if t.recipient == user:
+                    coins.append(t.coin_id)
+                elif t.sender == user:
+                    coins.remove(t.coin_id)
+        return coins

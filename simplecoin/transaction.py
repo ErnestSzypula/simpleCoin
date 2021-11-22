@@ -5,6 +5,7 @@ from dataclasses_json import dataclass_json
 @dataclass_json
 @dataclass
 class Transaction:
-    sender: int
-    recipient: int
-    quantity: float
+    recipient: str
+    coin_id: int
+    sender: str = None
+

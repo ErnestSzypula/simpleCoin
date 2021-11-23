@@ -4,9 +4,12 @@ import random
 from typing import List, Dict, Any, Callable
 
 from simplecoin.block import Block
-from simplecoin.transaction import Transaction
+from simplecoin.json_communication.transaction import Transaction
 from simplecoin.coin_storage import CoinStorage
 from simplecoin.error import CoinNotBelongToUserError, DoubleSpendingError
+
+from simplecoin.json_communication.generic import GenericRequest
+from simplecoin.json_communication.request_type import RequestType
 
 
 class ChainManager:
@@ -128,3 +131,13 @@ class ChainManager:
                 elif t.sender == user:
                     coins.remove(t.coin_id)
         return coins
+
+    def request(self, payload: GenericRequest):
+        if payload.type == RequestType.transactionRequest:
+            pass
+        elif payload.type == RequestType.createCoint:
+            pass
+        elif payload.type == RequestType.checkout:
+            pass
+        elif payload.type == RequestType.validateBlockchain:
+            pass

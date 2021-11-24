@@ -1,6 +1,8 @@
 from cmd import Cmd
 
-from simplecoin import ChainManager, Transaction, User
+from simplecoin.chain_manager import ChainManager
+from simplecoin.user import ChainManager, User
+from simplecoin.json_communication.transaction import Transaction
 from simplecoin import CoinNotBelongToUserError, DoubleSpendingError
 
 from tools import read
@@ -13,9 +15,8 @@ class App(Cmd):
 
     def __init__(self):
         Cmd.__init__(self)
-        self.chain_manager: ChainManager = ChainManager()
         self.users: Dict[str, User] = {}
-        print("To build the first block")
+        self.chain_manager: ChainManager = ChainManager()
 
     def default(self, line: str):
         self.stdout.write("unknown command: %s \n Type help or ? to list commands.\n")
@@ -40,7 +41,11 @@ class App(Cmd):
         """Add transaction"""
         try:
             transaction: Transaction = read_transaction()
-            self.chain_manager.new_data(transaction)
+            if transaction.sender not in self.users:
+                print("error: User does not exists")
+                return
+            self.users[transaction.sender].new_transaction(transaction)
+            # self.chain_manager.new_data(transaction)
         except ValueError:
             print("Wrong input value")
         except CoinNotBelongToUserError:

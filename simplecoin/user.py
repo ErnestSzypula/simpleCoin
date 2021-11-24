@@ -1,6 +1,7 @@
 from simplecoin.chain_manager import ChainManager
-from  json_communication.generic import GenericRequest
-from  json_communication.request_type import RequestType
+from simplecoin.json_communication.transaction import Transaction
+from simplecoin.json_communication.generic import GenericRequest
+from simplecoin.json_communication.request_type import RequestType
 from typing import List
 
 
@@ -20,6 +21,15 @@ class User:
     def get_block_chain_hash(self):
         self.hash = self.chain_manager.last_block.calculate_hash()
 
+    def new_transaction(self, t:Transaction):
+        self.chain_manager.request(
+            GenericRequest(
+                RequestType.transactionRequest,
+                t))
+
     def request(self, payload: GenericRequest):
         if payload.type == RequestType.updateHash:
             self.update_hash(payload.properties)
+
+        if payload.type == RequestType.transactionCompleted:
+            print(payload)

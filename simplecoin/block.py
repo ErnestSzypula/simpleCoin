@@ -6,7 +6,7 @@ import hashlib
 import time
 from typing import List
 
-from simplecoin.transaction import Transaction
+from simplecoin.json_communication.transaction import Transaction
 
 
 class Block:

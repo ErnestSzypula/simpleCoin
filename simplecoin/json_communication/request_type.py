@@ -6,4 +6,4 @@ class RequestType(Enum):
     transactionCompleted = 3
     checkout = 4
     validateBlockchain = 5
-    createCoint = 6
+    createCoin = 6

@@ -9,6 +9,7 @@ from simplecoin.error import CoinNotBelongToUserError, DoubleSpendingError
 from simplecoin.json_communication.transaction import Transaction
 from simplecoin.json_communication.generic import GenericRequest
 from simplecoin.json_communication.request_type import RequestType
+from simplecoin.json_communication.createcoin import CreateCoin
 
 
 class ChainManager:
@@ -148,9 +149,10 @@ class ChainManager:
             self.new_data(payload.properties)
             # transactionCompleted will be on block creation
             
-        # elif payload.type == RequestType.createCoint:
-
-        #     pass
+        elif payload.type == RequestType.createCoin:
+            if isinstance(payload, CreateCoin):
+                coin_id = self.coin_store.new_coin(random.uniform(0, 10.0))
+                self.pending_data.append(Transaction(recipient=payload.user,  coin_id=coin_id))
 
         # elif payload.type == RequestType.checkout:
         #     pass

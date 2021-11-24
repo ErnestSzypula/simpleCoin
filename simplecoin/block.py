@@ -1,12 +1,16 @@
+import json
+from dataclasses import dataclass
+from dataclasses_json import dataclass_json
+
 import hashlib
 import time
 from typing import List
 
-from simplecoin.transaction import Transaction
+from simplecoin.json_communication.transaction import Transaction
 
 
 class Block:
-    def __init__(self, prev_block_hash: str, data: List[Transaction], nonce: int = 0, timestamp: float = None):
+    def __init__(self, data: List[Transaction], prev_block_hash: str = None, nonce: int = 0, timestamp: float = None):
         self.prev_block_hash = prev_block_hash
         self.nonce = nonce
         self.data = data

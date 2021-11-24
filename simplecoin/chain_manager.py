@@ -1,13 +1,12 @@
 import secrets
-import hashlib
 import random
 from typing import List, Dict, Any, Callable
 
 from simplecoin.block import Block
-from simplecoin.json_communication.transaction import Transaction
 from simplecoin.coin_storage import CoinStorage
 from simplecoin.error import CoinNotBelongToUserError, DoubleSpendingError
 
+from simplecoin.json_communication.transaction import Transaction
 from simplecoin.json_communication.generic import GenericRequest
 from simplecoin.json_communication.request_type import RequestType
 
@@ -98,7 +97,17 @@ class ChainManager:
         for hc in self.hash_callback:
             hc(block.calculate_hash)
 
+        # self.propagate_transaction_completed(block)
+
         return vars(block)
+
+    # def propagate_transaction_completed(self, b: Block):
+    #     for t in b.data:
+    #         if isinstance(t, Transaction):
+    #             self.users[t.sender].request(
+    #                 GenericRequest(
+    #                     RequestType.transactionCompleted,
+    #                     t))
 
     @staticmethod
     def check_validity(block: Block, prev_block: Block) -> bool:
@@ -133,11 +142,18 @@ class ChainManager:
         return coins
 
     def request(self, payload: GenericRequest):
+        print(payload)
+
         if payload.type == RequestType.transactionRequest:
-            pass
-        elif payload.type == RequestType.createCoint:
-            pass
-        elif payload.type == RequestType.checkout:
-            pass
-        elif payload.type == RequestType.validateBlockchain:
-            pass
+            self.new_data(payload.properties)
+            # transactionCompleted will be on block creation
+            
+        # elif payload.type == RequestType.createCoint:
+
+        #     pass
+
+        # elif payload.type == RequestType.checkout:
+        #     pass
+
+        # elif payload.type == RequestType.validateBlockchain:
+        #     pass

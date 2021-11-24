@@ -154,8 +154,8 @@ class ChainManager:
                 coin_id = self.coin_store.new_coin(random.uniform(0, 10.0))
                 self.pending_data.append(Transaction(recipient=payload.user,  coin_id=coin_id))
 
-        # elif payload.type == RequestType.checkout:
-        #     pass
+        elif payload.type == RequestType.checkout:
+            self.checkout(payload.user)
 
-        # elif payload.type == RequestType.validateBlockchain:
-        #     pass
+        elif payload.type == RequestType.validateBlockchain:
+            self.is_valid()

@@ -31,5 +31,12 @@ class User:
         if payload.type == RequestType.updateHash:
             self.update_hash(payload.properties)
 
-        if payload.type == RequestType.transactionCompleted:
+        elif payload.type == RequestType.transactionCompleted:
             print(payload)
+
+        elif payload.type == RequestType.checkout:
+            print(payload)
+
+        elif payload.type == RequestType.validateBlockchain:
+            print(payload)
+        

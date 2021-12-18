@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json
+from simplecoin.json_communication.transaction_data import TransactionData
 
 
 @dataclass_json
 @dataclass
 class Transaction:
-    recipient: str
-    coin_id: int
-    sender: str = None
+    transaction_data: TransactionData
+    signature: bytes = None
 

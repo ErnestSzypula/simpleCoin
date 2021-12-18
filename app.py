@@ -1,3 +1,5 @@
+# DEPRECATED
+
 from cmd import Cmd
 
 from simplecoin.chain_manager import ChainManager

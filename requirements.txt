@@ -1,1 +1,2 @@
 dataclasses-json
+rsa==4.8

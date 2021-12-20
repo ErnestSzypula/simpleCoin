@@ -34,7 +34,7 @@ class ChainManager:
         self.identities = identities
         for i in range(coin_amount):
             coin_id = self.coin_store.new_coin(random.uniform(0, 10.0))
-            transaction_data = TransactionData(random.choice(self.identities).__str__(),  coin_id=coin_id,
+            transaction_data = TransactionData(random.choice(self.identities).n,  coin_id=coin_id,
                                                type=TransactionType.createCoin)
             self.pending_data.append(Transaction(transaction_data=transaction_data,
                                                  signature=sign(transaction_data.to_json(), self.private_key)))
@@ -160,7 +160,7 @@ class ChainManager:
         coins = []
         for b in self.chain:
             for t in b.data:
-                if t.transaction_data.recipient == identity.__str__():
+                if t.transaction_data.recipient == identity.n:
                     coins.append(t.transaction_data.coin_id)
                 elif is_key_signature(t.transaction_data.to_json(), t.signature, identity):
                     coins.remove(t.transaction_data.coin_id)

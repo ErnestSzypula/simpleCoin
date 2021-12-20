@@ -28,26 +28,29 @@ def main():
 
     for key in users:
         users[key].checkout()
-        print("User {} coins: {}".format(key, users[key].coins))
+        print("User {} coins: {} {}".format(key, users[key].coins, users[key].public_key.n))
 
     # TRANSACTION EXAMPLE
 
-    users["bob"].new_transaction(TransactionData(recipient=users["john"].public_key.__str__(), coin_id=users["bob"].coins[0]))
+    users["bob"].new_transaction(TransactionData(recipient=users["john"].public_key.n, coin_id=users["bob"].coins[0]))
 
     chain_manager.dig_block()
 
-    for key in users:
+    for key in users:      
         users[key].checkout()
         print("User {} coins: {}".format(key, users[key].coins))
 
     # VALIDATE COINS (GENESIS VALIDATION)
-
 
     # chain_manager.chain[0].data[0].transaction_data.coin_id = 2
     chain_manager.genesis_validation()
 
 
     # VALIDATE TRANSACTIONS (USER SIGN VALIDATION)
+
+    # chain_manager.chain[1].data[0].transaction_data.coin_id = 2
+    chain_manager.transactions_validation()
+
 
     # VALIDATE BLOCKCHAIN
 

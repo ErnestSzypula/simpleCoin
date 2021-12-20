@@ -148,10 +148,32 @@ class ChainManager:
         for transaction in self.chain[0].data:
             if not is_key_signature(transaction.transaction_data.to_json(), transaction.signature, self.public_key):
                 print("Genesis Validation Failed!")
+                print(transaction.transaction_data.to_json())
                 return False
         print("Genesis Validation Success!")
         return True
 
+
+    def coin_owner(self, coin_id: int, block_id: int) -> rsa.PublicKey:
+        owner: rsa.PublicKey
+        for b in self.chain[:block_id]:
+            for t in b.data:
+                if t.transaction_data.coin_id == coin_id:
+                    owner = rsa.PublicKey(t.transaction_data.recipient, 65537)
+        return owner
+
+
+    def transactions_validation(self) -> bool:
+        for block_id, block in enumerate(self.chain[1:], start=1):
+            for transaction in block.data:
+                if not is_key_signature(transaction.transaction_data.to_json(), 
+                                        transaction.signature, 
+                                        self.coin_owner(transaction.transaction_data.coin_id, block_id)):
+                    print("Transaction Validation Failed!")
+                    print(transaction.transaction_data.to_json())
+                    return False
+            print("Transaction Validation Success!")
+            return True
 
     def register_user_callback(self, f: Callable[[str], None]):
         self.hash_callback.append(f)

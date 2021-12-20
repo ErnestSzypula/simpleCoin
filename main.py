@@ -23,7 +23,7 @@ def main():
     chain_manager.register_user_callback(users["ala"].update_hash)
     chain_manager.register_user_callback(users["john"].update_hash)
 
-    # CREATE BLOCKCHAIN
+    # CREATE BLOCKCHAIN, creating coins
     chain_manager.construct_first_block([users[key].public_key for key in users], COIN_AMOUNT)
 
     for key in users:
@@ -40,9 +40,19 @@ def main():
         users[key].checkout()
         print("User {} coins: {}".format(key, users[key].coins))
 
-    # GENESIS VALIDATION
+    # VALIDATE COINS (GENESIS VALIDATION)
 
-    # TRANSACTION USER SIGN VALIDATION
+
+    # chain_manager.chain[0].data[0].transaction_data.coin_id = 2
+    chain_manager.genesis_validation()
+
+
+    # VALIDATE TRANSACTIONS (USER SIGN VALIDATION)
+
+    # VALIDATE BLOCKCHAIN
+
+    
+
 
 
 if __name__ == '__main__':

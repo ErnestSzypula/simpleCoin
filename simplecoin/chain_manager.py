@@ -144,6 +144,15 @@ class ChainManager:
                 return False
         return True
 
+    def genesis_validation(self) -> bool:
+        for transaction in self.chain[0].data:
+            if not is_key_signature(transaction.transaction_data.to_json(), transaction.signature, self.public_key):
+                print("Genesis Validation Failed!")
+                return False
+        print("Genesis Validation Success!")
+        return True
+
+
     def register_user_callback(self, f: Callable[[str], None]):
         self.hash_callback.append(f)
 

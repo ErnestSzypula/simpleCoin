@@ -43,19 +43,18 @@ def main():
     # VALIDATE COINS (GENESIS VALIDATION)
 
     # chain_manager.chain[0].data[0].transaction_data.coin_id = 2
-    chain_manager.genesis_validation()
+    print("Genesis Validation Success!" if chain_manager.genesis_validation() else "Genesis Validation Failed!")
 
 
     # VALIDATE TRANSACTIONS (USER SIGN VALIDATION)
 
     # chain_manager.chain[1].data[0].transaction_data.coin_id = 2
-    chain_manager.transactions_validation()
-
+    print("Transaction Validation Success!" if chain_manager.transactions_validation() else "Transaction Validation Failed!")
 
     # VALIDATE BLOCKCHAIN
 
-    
-
+    # chain_manager.chain[1].prev_block_hash = chain_manager.chain[1].prev_block_hash.replace("a", "b")
+    print("Blockchain Validation Success!" if chain_manager.is_valid() else "Blockchain Validation Failed!")
 
 
 if __name__ == '__main__':

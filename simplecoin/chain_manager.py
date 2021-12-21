@@ -1,3 +1,4 @@
+from logging import error
 import secrets
 import random
 import rsa
@@ -141,16 +142,16 @@ class ChainManager:
     def is_valid(self) -> bool:
         for i in range(len(self.chain) - 1, 0, -1):
             if ChainManager.check_validity(self.chain[i], self.chain[i-1]) is False:
+                error(self.chain[i])
+                error(self.chain[i-1])
                 return False
         return True
 
     def genesis_validation(self) -> bool:
         for transaction in self.chain[0].data:
             if not is_key_signature(transaction.transaction_data.to_json(), transaction.signature, self.public_key):
-                print("Genesis Validation Failed!")
-                print(transaction.transaction_data.to_json())
+                error(transaction.transaction_data.to_json())
                 return False
-        print("Genesis Validation Success!")
         return True
 
 
@@ -169,10 +170,8 @@ class ChainManager:
                 if not is_key_signature(transaction.transaction_data.to_json(), 
                                         transaction.signature, 
                                         self.coin_owner(transaction.transaction_data.coin_id, block_id)):
-                    print("Transaction Validation Failed!")
-                    print(transaction.transaction_data.to_json())
+                    error(transaction.transaction_data.to_json())
                     return False
-            print("Transaction Validation Success!")
             return True
 
     def register_user_callback(self, f: Callable[[str], None]):

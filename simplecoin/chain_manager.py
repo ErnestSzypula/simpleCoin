@@ -1,31 +1,44 @@
+from logging import error
 import secrets
 import random
+import rsa
+import json
+
 from typing import List, Dict, Any, Callable
 
 from simplecoin.block import Block
 from simplecoin.coin_storage import CoinStorage
 from simplecoin.error import CoinNotBelongToUserError, DoubleSpendingError
+from simplecoin.identity import sign, newkeys, is_key_signature
 
 from simplecoin.json_communication.transaction import Transaction
 from simplecoin.json_communication.generic import GenericRequest
 from simplecoin.json_communication.request_type import RequestType
 from simplecoin.json_communication.createcoin import CreateCoin
+from simplecoin.json_communication.transaction_data import TransactionData
+from simplecoin.json_communication.transaction_type import TransactionType
 
 
 class ChainManager:
     def __init__(self):
+        self.public_key, self.private_key = newkeys()
         self.chain: List[Block] = []
         self.pending_data: List[Transaction] = []
         self.coin_store: CoinStorage = CoinStorage()
         self.hash_callback: List[Callable[[str], None]] = []
+        self.identities: List[rsa.PublicKey] = []
 
     def append_block(self, block: Block):
         self.chain.append(block)
 
-    def construct_first_block(self, users: List[str], coin_amount: int):
+    def construct_first_block(self, identities: List[rsa.PublicKey], coin_amount: int):
+        self.identities = identities
         for i in range(coin_amount):
             coin_id = self.coin_store.new_coin(random.uniform(0, 10.0))
-            self.pending_data.append(Transaction(recipient=random.choice(users),  coin_id=coin_id))
+            transaction_data = TransactionData(random.choice(self.identities).n,  coin_id=coin_id,
+                                               type=TransactionType.createCoin)
+            self.pending_data.append(Transaction(transaction_data=transaction_data,
+                                                 signature=sign(transaction_data.to_json(), self.private_key)))
         temporary_block = Block(
             data=self.pending_data)
         self.pending_data = []
@@ -54,11 +67,14 @@ class ChainManager:
 
         self.pending_data.append(transaction)
 
-    def has_user_coin(self, transaction: Transaction) -> bool:
-        return transaction.coin_id in self.checkout(transaction.sender)
+    def has_user_coin(self, t: Transaction) -> bool:
+        for iden in self.identities:
+            if is_key_signature(t.transaction_data.to_json(), t.signature, iden):
+                return t.transaction_data.coin_id in self.checkout(iden)
+        return False
 
     def is_double_spending(self, transaction: Transaction) -> bool:
-        for t in  self.pending_data:
+        for t in self.pending_data:
             if t.sender == transaction.sender and t.coin_id == transaction.coin_id:
                 return True
 
@@ -105,7 +121,7 @@ class ChainManager:
     # def propagate_transaction_completed(self, b: Block):
     #     for t in b.data:
     #         if isinstance(t, Transaction):
-    #             self.users[t.sender].request(
+    #             self.identities[t.sender].request(
     #                 GenericRequest(
     #                     RequestType.transactionCompleted,
     #                     t))
@@ -126,20 +142,49 @@ class ChainManager:
     def is_valid(self) -> bool:
         for i in range(len(self.chain) - 1, 0, -1):
             if ChainManager.check_validity(self.chain[i], self.chain[i-1]) is False:
+                error(self.chain[i])
+                error(self.chain[i-1])
                 return False
         return True
+
+    def genesis_validation(self) -> bool:
+        for transaction in self.chain[0].data:
+            if not is_key_signature(transaction.transaction_data.to_json(), transaction.signature, self.public_key):
+                error(transaction.transaction_data.to_json())
+                return False
+        return True
+
+
+    def coin_owner(self, coin_id: int, block_id: int) -> rsa.PublicKey:
+        owner: rsa.PublicKey
+        for b in self.chain[:block_id]:
+            for t in b.data:
+                if t.transaction_data.coin_id == coin_id:
+                    owner = rsa.PublicKey(t.transaction_data.recipient, 65537)
+        return owner
+
+
+    def transactions_validation(self) -> bool:
+        for block_id, block in enumerate(self.chain[1:], start=1):
+            for transaction in block.data:
+                if not is_key_signature(transaction.transaction_data.to_json(), 
+                                        transaction.signature, 
+                                        self.coin_owner(transaction.transaction_data.coin_id, block_id)):
+                    error(transaction.transaction_data.to_json())
+                    return False
+            return True
 
     def register_user_callback(self, f: Callable[[str], None]):
         self.hash_callback.append(f)
 
-    def checkout(self, user: str) -> List[int]:
+    def checkout(self, identity: rsa.PublicKey) -> List[int]:
         coins = []
         for b in self.chain:
             for t in b.data:
-                if t.recipient == user:
-                    coins.append(t.coin_id)
-                elif t.sender == user:
-                    coins.remove(t.coin_id)
+                if t.transaction_data.recipient == identity.n:
+                    coins.append(t.transaction_data.coin_id)
+                elif is_key_signature(t.transaction_data.to_json(), t.signature, identity):
+                    coins.remove(t.transaction_data.coin_id)
         return coins
 
     def request(self, payload: GenericRequest):

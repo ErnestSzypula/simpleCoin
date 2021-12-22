@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class RequestType(Enum):
     updateHash = 1
     transactionRequest = 2

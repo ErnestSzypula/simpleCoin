@@ -29,11 +29,8 @@ class ChainManager:
         self.public_key = public_key
 
     def append_block(self, block: Block):
-        print("APEND BLOCK")
         self.pending_data = []
-        print(len(self.chain))
         self.chain.append(block)
-        print(len(self.chain))
 
     def last_block(self) -> Block:
         return self.chain[-1]
@@ -50,6 +47,7 @@ class ChainManager:
     def has_user_coin(self, t: Transaction) -> bool:
         for iden in self.identities:
             if is_key_signature(t.transaction_data.to_json(), t.signature, iden):
+                print(iden, t.transaction_data.coin_id)
                 return t.transaction_data.coin_id in self.checkout(iden)
         return False
 
@@ -93,10 +91,10 @@ class ChainManager:
         
         block = ChainManager.proof_of_work(temporary_block)
 
-        if ChainManager.check_validity(block, self.chain[-1]):
-            print("Validation successful... appending")
-            self.chain.append(block)
-            self.pending_data = []
+        # if ChainManager.check_validity(block, self.chain[-1]):
+        #     print("Validation successful... appending")
+        #     self.chain.append(block)
+        #     self.pending_data = []
 
         # for hc in self.hash_callback:
         #     hc(block.calculate_hash)
@@ -164,7 +162,6 @@ class ChainManager:
 
     def checkout(self, identity: rsa.PublicKey) -> List[int]:
         coins = []
-        print(len(self.chain))
         for b in self.chain:
             for t in b.data:
                 if t.transaction_data.recipient == identity.n:

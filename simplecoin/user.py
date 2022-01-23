@@ -28,8 +28,7 @@ class User:
 
     def dig_block(self, result_queue):
         self.proposed_block = self.chain_manager.dig_block()
-        print(len(self.proposed_block.data))
-        result_queue.put(self)
+        result_queue.put((self.name, self.proposed_block))
 
     def update_hash(self, ha: str):
         self.hash = ha
@@ -53,13 +52,14 @@ class User:
         self.broadcast_transaction(transaction)
 
     def broadcast_transaction(self, t: Transaction):
-        for i in range(len(self.nodes)):
+        for n in self.nodes:
             if random.random() < 0.9:
-                self.nodes[i].request(GenericRequest(RequestType.transactionRequest, t))
+                n.request(GenericRequest(RequestType.transactionRequest, t))
 
-    def broadcast_proposed_block(self):
-        for i in range(len(self.nodes)):
-            response = self.nodes[i].request(GenericRequest(RequestType.proposedBlock, self.proposed_block))
+    def broadcast_proposed_block(self, proposed_block):
+        self.proposed_block = proposed_block
+        for n in self.nodes:
+            response = n.request(GenericRequest(RequestType.proposedBlock, self.proposed_block))
             if response == response.reject:
                 print(f"block rejected")
                 return
@@ -73,6 +73,7 @@ class User:
         return ResponseCode.accept
 
     def validate_proposed_block(self, block: Block):
+        print(self.name)
         if not self.chain_manager.block_transactions_validation(block):
             return False
         return True

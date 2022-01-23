@@ -8,3 +8,4 @@ class RequestType(Enum):
     checkout = 4
     validateBlockchain = 5
     createCoin = 6
+    proposedBlock = 7

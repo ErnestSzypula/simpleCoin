@@ -162,14 +162,26 @@ class ChainManager:
                     coins.remove(t.transaction_data.coin_id)
         return coins
 
+
+
     def block_transactions_validation(self, block: Block):
+        createCoinCounter = 0
         for i, t in enumerate(block.data):
             # print("Checking ", t.transaction_data)
             if not self.has_user_coin(t):
-                raise CoinNotBelongToUserError
+                return False
 
             if self.is_double_spending(t, block.data[:i]):
-                raise DoubleSpendingError
+                return False 
+
+            if(t.transaction_data.type == TransactionType.createCoin):
+                createCoinCounter = createCoinCounter + 1
+        
+
+        # there must be only one coin created
+        if (createCoinCounter != 1):
+            return False
+        
         return True
 
     def request(self, payload: GenericRequest):

@@ -51,19 +51,19 @@ def main():
     threads = []
     result_queue = Queue()
 
-    print("Start dig")
+    print("Start digging")
     for key in users:
         thread = threading.Thread(target=users[key].dig_block, args=[result_queue])
         thread.start()
         threads.append(thread)
 
     winning_results = result_queue.get()
-    print("End dig")
+    print("End digging")
 
     for thread in threads:
         thread.join()
 
-    print(f"digging win by {winning_results[0]}")
+    print(f"Digging won by {winning_results[0]}")
 
     users[winning_results[0]].broadcast_proposed_block(winning_results[1])
 

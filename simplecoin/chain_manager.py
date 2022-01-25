@@ -74,7 +74,7 @@ class ChainManager:
             block.nonce = secrets.randbits(32)
             rounds += 1
 
-        print("It took ", rounds, " rounds")
+        print("Someone took", rounds, "rounds to dig")
 
         return block
 

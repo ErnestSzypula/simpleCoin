@@ -64,7 +64,7 @@ class User:
                 print(f"block rejected")
                 return
 
-        print("block successfully broadcast")
+        print("block successfully broadcasted")
 
     def append_proposed_block(self, block: Block):
         if not self.validate_proposed_block(block):
@@ -73,7 +73,7 @@ class User:
         return ResponseCode.accept
 
     def validate_proposed_block(self, block: Block):
-        print(self.name)
+        print(self.name, "is validating proposed block")
         if not self.chain_manager.block_transactions_validation(block):
             return False
         return True

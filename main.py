@@ -1,60 +1,76 @@
+import multiprocessing
+import threading
+
 from simplecoin.chain_manager import ChainManager
+from simplecoin.coin_storage import CoinStorage
+from simplecoin.construct_genesis_block import construct_genesis_block
 from simplecoin.user import ChainManager, User
 from simplecoin.json_communication.transaction import TransactionData
 from simplecoin import CoinNotBelongToUserError, DoubleSpendingError
+from queue import Queue
 
 from typing import Dict
-
 
 COIN_AMOUNT = 10
 
 
 def main():
-    chain_manager: ChainManager = ChainManager()
+    coin_storage: CoinStorage = CoinStorage()
 
     # CREATE IDENTITY
-    users: Dict[str, User] = {
-        "bob": User(chain_manager),
-        "ala": User(chain_manager),
-        "john": User(chain_manager),
+    users = {
+        "bob": User("bob"),
+        "ala": User("ala"),
+        "john": User("john")
     }
 
-    chain_manager.register_user_callback(users["bob"].update_hash)
-    chain_manager.register_user_callback(users["ala"].update_hash)
-    chain_manager.register_user_callback(users["john"].update_hash)
-
-    # CREATE BLOCKCHAIN, creating coins
-    chain_manager.construct_first_block([users[key].public_key for key in users], COIN_AMOUNT)
+    # CREATE BLOCKCHAIN, CREATE COINS
+    genesis_block, genesis_block_public_key = construct_genesis_block(coin_storage, [users[key].public_key for key in users],
+                                                                      COIN_AMOUNT)
 
     for key in users:
+        users[key].set_genesis_block(genesis_block, genesis_block_public_key)
+
+    # INITIALIZE NETWORK
+    for key in users:
+        for k in users:
+            if key != k:
+                users[key].register_node(users[k])
+
+    # CHECKOUT
+    for key in users:
         users[key].checkout()
-        print("User {} coins: {} {}".format(key, users[key].coins, users[key].public_key.n))
+        print("User {} coins: {} {}".format(users[key].name, users[key].coins, users[key].public_key.n))
 
-    # TRANSACTION EXAMPLE
-
+    # # TRANSACTION EXAMPLES
     users["bob"].new_transaction(TransactionData(recipient=users["john"].public_key.n, coin_id=users["bob"].coins[0]))
+    users["ala"].new_transaction(TransactionData(recipient=users["john"].public_key.n, coin_id=users["ala"].coins[0]))
+    users["john"].new_transaction(TransactionData(recipient=users["bob"].public_key.n, coin_id=users["john"].coins[0]))
 
-    chain_manager.dig_block()
+    # MAKE TURN
+    threads = []
+    result_queue = Queue()
 
-    for key in users:      
+    print("Start digging")
+    for key in users:
+        thread = threading.Thread(target=users[key].dig_block, args=[result_queue])
+        thread.start()
+        threads.append(thread)
+
+    winning_results = result_queue.get()
+    print("End digging")
+
+    for thread in threads:
+        thread.join()
+
+    print(f"Digging won by {winning_results[0]}")
+
+    users[winning_results[0]].broadcast_proposed_block(winning_results[1])
+
+    # CHECKOUT
+    for key in users:
         users[key].checkout()
-        print("User {} coins: {}".format(key, users[key].coins))
-
-    # VALIDATE COINS (GENESIS VALIDATION)
-
-    # chain_manager.chain[0].data[0].transaction_data.coin_id = 2
-    print("Genesis Validation Success!" if chain_manager.genesis_validation() else "Genesis Validation Failed!")
-
-
-    # VALIDATE TRANSACTIONS (USER SIGN VALIDATION)
-
-    # chain_manager.chain[1].data[0].transaction_data.coin_id = 2
-    print("Transaction Validation Success!" if chain_manager.transactions_validation() else "Transaction Validation Failed!")
-
-    # VALIDATE BLOCKCHAIN
-
-    # chain_manager.chain[1].prev_block_hash = chain_manager.chain[1].prev_block_hash.replace("a", "b")
-    print("Blockchain Validation Success!" if chain_manager.is_valid() else "Blockchain Validation Failed!")
+        print("User {} coins: {} {}".format(users[key].name, users[key].coins, users[key].public_key.n))
 
 
 if __name__ == '__main__':

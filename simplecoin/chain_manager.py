@@ -50,8 +50,9 @@ class ChainManager:
     def has_user_coin(self, t: Transaction) -> bool:
         for iden in self.identities:
             if is_key_signature(t.transaction_data.to_json(), t.signature, iden):
-                print("Coin", t.transaction_data.coin_id, "belongs to", iden.n)
-
+                # print("Coin", t.transaction_data.coi÷n_id, "belongs to", iden.n)
+                if(t.transaction_data.type == TransactionType.createCoin):
+                    return True
                 return t.transaction_data.coin_id in self.checkout(iden)
         return False
 
@@ -187,11 +188,11 @@ class ChainManager:
     def block_transactions_validation(self, block: Block):
         for i, t in enumerate(block.data):
             print("Checking", t.transaction_data)
-            # if not self.has_user_coin(t):
-            #     raise CoinNotBelongToUserError
+            if not self.has_user_coin(t):
+                raise CoinNotBelongToUserError
 
-            # if self.is_double_spending(t, block.data[:i]):
-            #     raise DoubleSpendingError
+            if self.is_double_spending(t, block.data[:i]):
+                raise DoubleSpendingError
         return True
 
     def request(self, payload: GenericRequest):
@@ -203,7 +204,7 @@ class ChainManager:
             
         elif payload.type == RequestType.createCoin:
             if isinstance(payload, CreateCoin):
-                coin_id = self.coin_store.new_coin(random.uniform(0, 10.0))
+                coin_id = self.coin_store.new_coin()
                 self.pending_data.append(Transaction(recipient=payload.user,  coin_id=coin_id))
 
         elif payload.type == RequestType.checkout:

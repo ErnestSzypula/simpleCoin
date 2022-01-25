@@ -1,3 +1,4 @@
+from decimal import MAX_EMAX
 from logging import error
 import secrets
 import random
@@ -8,12 +9,14 @@ from typing import List, Dict, Any, Callable
 from simplecoin.block import Block
 from simplecoin.coin_storage import CoinStorage
 from simplecoin.error import CoinNotBelongToUserError, DoubleSpendingError
-from simplecoin.identity import is_key_signature
+from simplecoin.identity import is_key_signature, sign
 
 from simplecoin.json_communication.transaction import Transaction
 from simplecoin.json_communication.generic import GenericRequest
 from simplecoin.json_communication.request_type import RequestType
 from simplecoin.json_communication.createcoin import CreateCoin
+from simplecoin.json_communication.transaction_data import TransactionData
+from simplecoin.json_communication.transaction_type import TransactionType
 
 
 class ChainManager:
@@ -39,15 +42,16 @@ class ChainManager:
         if not self.has_user_coin(transaction):
             raise CoinNotBelongToUserError
 
-        # if self.is_double_spending(transaction):
-        #     raise DoubleSpendingError
+        if self.is_double_spending(transaction):
+            raise DoubleSpendingError
 
         self.pending_data.append(transaction)
 
     def has_user_coin(self, t: Transaction) -> bool:
         for iden in self.identities:
             if is_key_signature(t.transaction_data.to_json(), t.signature, iden):
-                print(iden, t.transaction_data.coin_id)
+                print("Coin", t.transaction_data.coin_id, "belongs to", iden.n)
+
                 return t.transaction_data.coin_id in self.checkout(iden)
         return False
 
@@ -83,8 +87,18 @@ class ChainManager:
         mining_difficulty_level = 2
         return block.calculate_hash.startswith("0" * mining_difficulty_level)
 
-    def dig_block(self) -> Block:
+    def dig_block(self, diggerPublickKey, diggerPrivateKey ) -> Block:
         prev_block_hash = self.chain[-1].calculate_hash
+
+        # adding reward
+        
+        self.updateCoinStorage()
+        
+        coin_id = self.coin_store.new_coin()
+        transaction_data = TransactionData(diggerPublickKey.n,  coin_id=coin_id,
+                                           type=TransactionType.createCoin)
+        self.pending_data.append(Transaction(transaction_data=transaction_data,
+                                             signature=sign(transaction_data.to_json(), diggerPrivateKey)))
         temporary_block = Block(
             prev_block_hash=prev_block_hash,
             data=self.pending_data)
@@ -172,11 +186,12 @@ class ChainManager:
 
     def block_transactions_validation(self, block: Block):
         for i, t in enumerate(block.data):
-            if not self.has_user_coin(t):
-                raise CoinNotBelongToUserError
+            print("Checking", t.transaction_data)
+            # if not self.has_user_coin(t):
+            #     raise CoinNotBelongToUserError
 
-            if self.is_double_spending(t, block.data[:i]):
-                raise DoubleSpendingError
+            # if self.is_double_spending(t, block.data[:i]):
+            #     raise DoubleSpendingError
         return True
 
     def request(self, payload: GenericRequest):

@@ -2,12 +2,12 @@ import random
 
 from simplecoin.chain_manager import ChainManager
 from simplecoin.identity import sign, newkeys
+from simplecoin.block import Block
 from simplecoin.json_communication.response_code import ResponseCode
 from simplecoin.json_communication.transaction_data import TransactionData
 from simplecoin.json_communication.transaction import Transaction
 from simplecoin.json_communication.generic import GenericRequest
 from simplecoin.json_communication.request_type import RequestType
-from simplecoin.block import Block
 
 from typing import List, Callable, Any
 
@@ -27,7 +27,7 @@ class User:
         self.chain_manager.set_genesis_block(block, public_key)
 
     def dig_block(self, result_queue):
-        self.proposed_block = self.chain_manager.dig_block()
+        self.proposed_block = self.chain_manager.dig_block(self.public_key, self.private_key)
         result_queue.put((self.name, self.proposed_block))
 
     def update_hash(self, ha: str):
@@ -65,6 +65,11 @@ class User:
                 return
 
         print("block successfully broadcasted")
+
+        # accapted
+        
+
+
 
     def append_proposed_block(self, block: Block):
         if not self.validate_proposed_block(block):

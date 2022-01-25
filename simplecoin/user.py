@@ -65,9 +65,10 @@ class User:
                 return
 
         print("block successfully broadcasted")
-
-        # accapted
-        
+        if self.chain_manager.check_validity(proposed_block, self.chain_manager.chain[-1]):
+            self.chain_manager.append_block(proposed_block)
+        else:
+            print("faild to validate")
 
 
 

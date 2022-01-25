@@ -1,10 +1,8 @@
-from decimal import MAX_EMAX
 from logging import error
 import secrets
-import random
 import rsa
 
-from typing import List, Dict, Any, Callable
+from typing import List
 
 from simplecoin.block import Block
 from simplecoin.coin_storage import CoinStorage
@@ -106,25 +104,7 @@ class ChainManager:
         
         block = ChainManager.proof_of_work(temporary_block)
 
-        # if ChainManager.check_validity(block, self.chain[-1]):
-        #     print("Validation successful... appending")
-        #     self.chain.append(block)
-        #     self.pending_data = []
-
-        # for hc in self.hash_callback:
-        #     hc(block.calculate_hash)
-
-        # self.propagate_transaction_completed(block)
-
         return block
-
-    # def propagate_transaction_completed(self, b: Block):
-    #     for t in b.data:
-    #         if isinstance(t, Transaction):
-    #             self.identities[t.sender].request(
-    #                 GenericRequest(
-    #                     RequestType.transactionCompleted,
-    #                     t))
 
     @staticmethod
     def check_validity(block: Block, prev_block: Block) -> bool:
@@ -172,9 +152,6 @@ class ChainManager:
                     return False
             return True
 
-    # def register_user_callback(self, f: Callable[[str], None]):
-    #     self.hash_callback.append(f)
-
     def checkout(self, identity: rsa.PublicKey) -> List[int]:
         coins = []
         for b in self.chain:
@@ -187,7 +164,7 @@ class ChainManager:
 
     def block_transactions_validation(self, block: Block):
         for i, t in enumerate(block.data):
-            print("Checking", t.transaction_data)
+            # print("Checking ", t.transaction_data)
             if not self.has_user_coin(t):
                 raise CoinNotBelongToUserError
 

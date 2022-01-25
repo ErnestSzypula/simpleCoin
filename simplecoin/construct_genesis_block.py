@@ -18,7 +18,7 @@ def construct_genesis_block(coin_store: CoinStorage, identities: List[rsa.Public
     public_key, private_key = newkeys()
     pending_data = []
     for i in range(coin_amount):
-        coin_id = coin_store.new_coin(random.uniform(0, 10.0))
+        coin_id = coin_store.new_coin()
         transaction_data = TransactionData(random.choice(identities).n,  coin_id=coin_id,
                                            type=TransactionType.createCoin)
         pending_data.append(Transaction(transaction_data=transaction_data,

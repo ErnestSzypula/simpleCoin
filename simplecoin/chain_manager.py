@@ -196,3 +196,11 @@ class ChainManager:
 
         elif payload.type == RequestType.validateBlockchain:
             self.is_valid()
+
+    def updateCoinStorage(self):
+        maxCoinId = 0
+        for block in self.chain:
+            for transaction in block.data:
+                maxCoinId = max(maxCoinId, transaction.transaction_data.coin_id)
+        self.coin_store.set_counter(maxCoinId+1)
+        

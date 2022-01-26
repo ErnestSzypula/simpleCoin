@@ -28,7 +28,7 @@ class User:
 
     def dig_block(self, result_queue):
         self.proposed_block = self.chain_manager.dig_block(self.public_key, self.private_key)
-        result_queue.put((self.name, self.proposed_block))
+        result_queue.put((self.name, self.proposed_block, self.proposed_block.calculate_hash))
 
     def update_hash(self, ha: str):
         self.hash = ha
@@ -56,10 +56,11 @@ class User:
             if random.random() < 0.9:
                 n.request(GenericRequest(RequestType.transactionRequest, t))
 
-    def broadcast_proposed_block(self, proposed_block):
+    def broadcast_proposed_block(self, proposed_block, proposed_block_hash):
         self.proposed_block = proposed_block
         for n in self.nodes:
-            response = n.request(GenericRequest(RequestType.proposedBlock, self.proposed_block))
+            response = n.request(GenericRequest(RequestType.proposedBlock,
+                                 {"block": proposed_block, "hash": proposed_block_hash}))
             if response == response.reject:
                 print(f"block rejected")
                 return
@@ -72,15 +73,19 @@ class User:
 
 
 
-    def append_proposed_block(self, block: Block):
-        if not self.validate_proposed_block(block):
+    def append_proposed_block(self, block: Block, hash):
+        if not self.validate_proposed_block(block, hash):
             return ResponseCode.reject
         self.chain_manager.append_block(block)
         return ResponseCode.accept
 
-    def validate_proposed_block(self, block: Block):
+    def validate_proposed_block(self, block: Block, hash):
         print(self.name, "is validating proposed block")
         if not self.chain_manager.block_transactions_validation(block):
+            return False
+        if not self.chain_manager.check_validity(block, self.chain_manager.chain[-1]):
+            return False
+        if block.calculate_hash != hash:
             return False
         return True
 
@@ -92,7 +97,7 @@ class User:
             self.chain_manager.pending_data.append(payload.properties)
 
         elif payload.type == RequestType.proposedBlock:
-            return self.append_proposed_block(payload.properties)
+            return self.append_proposed_block(payload.properties["block"], payload.properties["hash"])
 
         elif payload.type == RequestType.transactionCompleted:
             print(payload)

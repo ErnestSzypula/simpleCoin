@@ -65,7 +65,7 @@ def main():
 
     print(f"Digging won by {winning_results[0]}")
 
-    users[winning_results[0]].broadcast_proposed_block(winning_results[1])
+    users[winning_results[0]].broadcast_proposed_block(winning_results[1], winning_results[2])
 
     # CHECKOUT
     for key in users:
